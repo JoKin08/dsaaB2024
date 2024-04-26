@@ -34,7 +34,8 @@ public class GUI {
     // If true, crop snapshots, otherwise all snapshots have same size.
     public static final boolean CROP_SNAPSHOT = false;
 
-    // Determines the width of the "brush" used to mark the priority mask by clicking on the image.
+    // Determines the width of the "brush" used to mark the priority mask by
+    // clicking on the image.
     private int brushWidth;
     // Flag storing whether the carving animation is happening.
     private boolean carving;
@@ -64,11 +65,11 @@ public class GUI {
     private BufferedImage bufferedImage;
 
     public GUI() {
-        this.carver = new SeamCarver[]{null, null};
+        this.carver = new SeamCarver[] { null, null };
         this.factory = new SeamCarverFactory();
         this.update = true;
 
-        JFrame frame = new JFrame("Karve");
+        JFrame frame = new JFrame("DSAAB Group22");
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         // Add the display image showing the image being carved.
@@ -94,7 +95,7 @@ public class GUI {
         JPanel sliderPanel = new JPanel();
         JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER, SLIDER / 2);
         slider.setFocusable(false);
-        ImageIcon[] speeds = new ImageIcon[]{
+        ImageIcon[] speeds = new ImageIcon[] {
                 icon("speed1.png"),
                 icon("speed2.png"),
                 icon("speed3.png")
@@ -124,7 +125,8 @@ public class GUI {
             this.horizontal = !this.horizontal;
             this.idx = this.horizontal ? 1 : 0;
             this.clearBufferedImage();
-            if (this.update) this.updateDisplayImage();
+            if (this.update)
+                this.updateDisplayImage();
             SeamCarver carver = this.carver[this.idx];
             frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
         });
@@ -150,9 +152,8 @@ public class GUI {
         checkBoxPanel.add(updateCheckBox);
 
         this.addKeyListeners(
-                new AbstractButton[] {highlightCheckBox, horizontalCheckBox, recordingCheckBox, updateCheckBox},
-                new int[] {KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U}
-        );
+                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, updateCheckBox },
+                new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
         menuPanel.add(checkBoxPanel);
 
@@ -170,9 +171,8 @@ public class GUI {
         snapshotButton.setIcon(icon("snapshot.png"));
 
         this.addKeyListeners(
-                new AbstractButton[] {playButton, addButton, removeButton, snapshotButton},
-                new int[] {KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_C}
-        );
+                new AbstractButton[] { playButton, addButton, removeButton, snapshotButton },
+                new int[] { KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_C });
 
         // Function to run in separate thread when the "Play" button is pressed.
         Runnable animate = () -> {
@@ -190,7 +190,7 @@ public class GUI {
             }
         };
 
-        Thread[] thread = {new Thread(animate)};
+        Thread[] thread = { new Thread(animate) };
         // Manage animation thread when "Play/Pause" button is clicked.
         playButton.addActionListener(e -> {
             addButton.setEnabled(this.carving);
@@ -215,8 +215,10 @@ public class GUI {
             SeamCarver carver = this.carver[this.idx];
             boolean valid = carver.add(this.highlight, SEAM_COLOR);
             if (valid) {
-                if (this.recording) captureSnapshot();
-                if (this.update) this.updateDisplayImage();
+                if (this.recording)
+                    captureSnapshot();
+                if (this.update)
+                    this.updateDisplayImage();
                 frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
@@ -226,14 +228,17 @@ public class GUI {
             SeamCarver carver = this.carver[this.idx];
             boolean valid = carver.remove(this.highlight, SEAM_COLOR);
             if (valid) {
-                if (this.recording) captureSnapshot();
-                if (this.update) this.updateDisplayImage();
+                if (this.recording)
+                    captureSnapshot();
+                if (this.update)
+                    this.updateDisplayImage();
                 frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
         // Create a snapshot of the current image when the "Snapshot" button is clicked.
         snapshotButton.addActionListener(e -> {
-            if (!this.recording) captureSnapshot();
+            if (!this.recording)
+                captureSnapshot();
         });
         buttonPanel.add(playButton);
         buttonPanel.add(addButton);
@@ -258,14 +263,18 @@ public class GUI {
     /*
      * Add Seams back to the image when using the animate feature.
      *
-     * @param frame     The UI Window. The title is updated to reflect the current size of the image.
-     * @param slider    The slider used to determine animation speed.
+     * @param frame The UI Window. The title is updated to reflect the current size
+     * of the image.
+     * 
+     * @param slider The slider used to determine animation speed.
      */
     private void carveAdd(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
         while (this.carving && carver.add(this.highlight, SEAM_COLOR)) {
-            if (this.recording) captureSnapshot();
-            if (this.update) this.updateDisplayImage();
+            if (this.recording)
+                captureSnapshot();
+            if (this.update)
+                this.updateDisplayImage();
             frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
@@ -274,14 +283,18 @@ public class GUI {
     /*
      * Remove Seams from the image when using the animate feature.
      *
-     * @param frame     The UI Window. The title is updated to reflect the current size of the image.
-     * @param slider    The slider used to determine animation speed.
+     * @param frame The UI Window. The title is updated to reflect the current size
+     * of the image.
+     * 
+     * @param slider The slider used to determine animation speed.
      */
     private void carveRemove(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
         while (this.carving && carver.remove(this.highlight, SEAM_COLOR)) {
-            if (this.recording) captureSnapshot();
-            if (this.update) this.updateDisplayImage();
+            if (this.recording)
+                captureSnapshot();
+            if (this.update)
+                this.updateDisplayImage();
             frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
@@ -310,8 +323,9 @@ public class GUI {
     /*
      * Enables/Disables all components in a JPanel.
      *
-     * @param panel     The panel to enable/disable.
-     * @param enable    If true, enable all elements, otherwise disable.
+     * @param panel The panel to enable/disable.
+     * 
+     * @param enable If true, enable all elements, otherwise disable.
      */
     private void setEnabled(JPanel panel, boolean enable) {
         for (Component comp : panel.getComponents()) {
@@ -324,23 +338,27 @@ public class GUI {
     }
 
     /*
-     * Adds a drop target to the display image. This allows the user to drag and drop
+     * Adds a drop target to the display image. This allows the user to drag and
+     * drop
      * files into the panel and have them be processed.
      * Code from:
-     * https://stackoverflow.com/questions/811248/how-can-i-use-drag-and-drop-in-swing-to-get-file-path
+     * https://stackoverflow.com/questions/811248/how-can-i-use-drag-and-drop-in-
+     * swing-to-get-file-path
      *
-     * @param frame     The current window frame. Used to update the title.
+     * @param frame The current window frame. Used to update the title.
+     * 
      * @param menuPanel The menuPanel to enable once the user drops in an image.
      */
     private void addDropTarget(JFrame frame, JPanel menuPanel) {
         this.displayImage.setDropTarget(new DropTarget() {
             public synchronized void drop(DropTargetDropEvent evt) {
-                if (carving) return;
+                if (carving)
+                    return;
                 try {
                     evt.acceptDrop(DnDConstants.ACTION_COPY);
                     List<File> droppedFiles = (List) evt
-                                    .getTransferable()
-                                    .getTransferData(DataFlavor.javaFileListFlavor);
+                            .getTransferable()
+                            .getTransferData(DataFlavor.javaFileListFlavor);
                     File image = droppedFiles.get(0);
 
                     // Vertical Seam Carver
@@ -378,14 +396,16 @@ public class GUI {
     /*
      * Adds Key Bindings to Buttons.
      *
-     * @param buttons       A list of buttons to add key bindings to.
-     * @param keyCodes      A list of Key Codes that each button should map to.
+     * @param buttons A list of buttons to add key bindings to.
+     * 
+     * @param keyCodes A list of Key Codes that each button should map to.
      */
     private void addKeyListeners(AbstractButton[] buttons, int[] keyCodes) {
         for (int i = 0; i < buttons.length; i++) {
             AbstractButton button = buttons[i];
             button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).clear();
-            button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(keyCodes[i], 0), "KEY_BINDING");
+            button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(keyCodes[i], 0),
+                    "KEY_BINDING");
             button.getActionMap().put("KEY_BINDING", new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent evt) {
@@ -411,9 +431,11 @@ public class GUI {
              * to show areas of low or high priority.
              */
             Random rand = new Random(System.currentTimeMillis());
+
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (carving || !update || carver[idx] == null) return;
+                if (carving || !update || carver[idx] == null)
+                    return;
                 float x = e.getX(), y = e.getY();
                 SeamCarver current = carver[idx];
                 int imageWidth = bufferedImage.getWidth(), imageHeight = bufferedImage.getHeight();
@@ -421,9 +443,19 @@ public class GUI {
                 float labelStepH = (float) imageHeight / displayImage.getHeight();
                 int cX = (int) (x * labelStepW + 0.5f); // X coordinate on actual image.
                 int cY = (int) (y * labelStepH + 0.5f); // Y coordinate on actual image.
-                if (horizontal) { int temp = cX; cX = cY; cY = temp; cY = imageWidth - cY; }
-                if (horizontal) { int temp = imageWidth; imageWidth = imageHeight; imageHeight = temp; }
-                if (cX >= imageWidth || cY >= imageHeight) return;
+                if (horizontal) {
+                    int temp = cX;
+                    cX = cY;
+                    cY = temp;
+                    cY = imageWidth - cY;
+                }
+                if (horizontal) {
+                    int temp = imageWidth;
+                    imageWidth = imageHeight;
+                    imageHeight = temp;
+                }
+                if (cX >= imageWidth || cY >= imageHeight)
+                    return;
                 boolean isLeftClick = SwingUtilities.isLeftMouseButton(e);
                 int energy = isLeftClick ? 0 : (ENERGY_TYPE == EnergyType.FORWARD ? rand.nextInt(256) : 255);
                 int color = isLeftClick ? Color.RED.getRGB() : Color.GREEN.getRGB();
@@ -444,7 +476,7 @@ public class GUI {
     /*
      * Updates the display image for the UI.
      *
-     * @return          An ImageIcon representing the scaled image.
+     * @return An ImageIcon representing the scaled image.
      */
     private ImageIcon updateBufferedImage() {
         SeamCarver carver = this.carver[this.idx];
@@ -480,14 +512,14 @@ public class GUI {
         return new ImageIcon(this.bufferedImage.getScaledInstance(
                 Utils.max(this.scaleW, 1),
                 Utils.max(this.scaleH, 1),
-                Image.SCALE_FAST
-        ));
+                Image.SCALE_FAST));
     }
 
     /*
-     * Captures the current image and saves to a PNG file in the "Snapshots" directory.
+     * Captures the current image and saves to a PNG file in the "Snapshots"
+     * directory.
      *
-     * @return          See "Snapshots" directory.
+     * @return See "Snapshots" directory.
      */
     private void captureSnapshot() {
         SeamCarver carver = this.carver[this.idx];
@@ -498,13 +530,13 @@ public class GUI {
                     carver.getWidth(),
                     carver.getHeight(),
                     this.horizontal,
-                    filename
-            );
+                    filename);
         } else {
             File snapshot = new File(filename);
             try {
                 ImageIO.write(this.bufferedImage, "PNG", snapshot);
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
 
     }
@@ -512,9 +544,11 @@ public class GUI {
     /*
      * Creates Image Icons for components used in the User Interface.
      *
-     * @param filename  The filename/path of the Icon to use.
-     * @param dims      The scaling factors to use to resize the Icon.
-     * @return          An ImageIcon scaled to the given dimensions.
+     * @param filename The filename/path of the Icon to use.
+     * 
+     * @param dims The scaling factors to use to resize the Icon.
+     * 
+     * @return An ImageIcon scaled to the given dimensions.
      */
     private ImageIcon icon(String filename, int... dims) {
         URL url = getClass().getResource(ICONS_FOLDER + "/" + filename);
