@@ -444,15 +444,14 @@ public class GUI {
                 int cX = (int) (x * labelStepW + 0.5f); // X coordinate on actual image.
                 int cY = (int) (y * labelStepH + 0.5f); // Y coordinate on actual image.
                 if (horizontal) {
-                    int temp = cX;
+                    int temp1 = cX;
                     cX = cY;
-                    cY = temp;
+                    cY = temp1;
                     cY = imageWidth - cY;
-                }
-                if (horizontal) {
-                    int temp = imageWidth;
+
+                    int temp2 = imageWidth;
                     imageWidth = imageHeight;
-                    imageHeight = temp;
+                    imageHeight = temp2;
                 }
                 if (cX >= imageWidth || cY >= imageHeight)
                     return;
