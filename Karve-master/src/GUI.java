@@ -488,7 +488,7 @@ public class GUI {
             Utils.parallel((cpu, cpus) -> {
                 for (int y = height - 1 - cpu; y >= 0; y -= cpus) {
                     for (int x = 0; x < width; x++) {
-                        this.bufferedImage.setRGB(y, x, pixels[y * width + x]);
+                        this.bufferedImage.setRGB(height - 1 - y, x, pixels[y * width + x]); // 具体改的地方是这里
                     }
                 }
                 for (int y = cpu; y < height; y += cpus) {
@@ -497,13 +497,10 @@ public class GUI {
             });
         } else {
             Utils.parallel((cpu, cpus) -> {
-                for (int y = cpu; y < height; y += cpus) {
+                for (int y = 0; y < height; y++) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
                     }
-                }
-                for (int y = cpu; y < height; y += cpus) {
-                    this.bufferedImage.setRGB(width - 1, y, 0xFF);
                 }
             });
         }
