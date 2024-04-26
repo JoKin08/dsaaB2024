@@ -383,7 +383,7 @@ public class GUI {
 
                     setEnabled(menuPanel, true);
                     frame.pack();
-                    frame.setTitle("Karve - " + carver[idx].getWidth() + " x " + carver[idx].getHeight());
+                    frame.setTitle("Group22 - " + carver[idx].getWidth() + " x " + carver[idx].getHeight());
 
                     evt.dropComplete(true);
                 } catch (Exception ignored) {
