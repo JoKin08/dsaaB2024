@@ -108,7 +108,7 @@ public class GUI {
 
         // Add the checkboxes for "Show Seams", "Horizontal", and "Record".
         // "Show Seams" checkbox.
-        Font font = new Font("Arial", Font.PLAIN, 15);
+        Font font = new Font("Arial", Font.BOLD, 15);
         JPanel checkBoxPanel = new JPanel(new GridLayout(2, 2));
         JCheckBox highlightCheckBox = new JCheckBox("Show Seams");
         highlightCheckBox.setFont(font);
@@ -128,7 +128,7 @@ public class GUI {
             if (this.update)
                 this.updateDisplayImage();
             SeamCarver carver = this.carver[this.idx];
-            frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
         });
         checkBoxPanel.add(horizontalCheckBox);
         // "Recording" checkbox.
