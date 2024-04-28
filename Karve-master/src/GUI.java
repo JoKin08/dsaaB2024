@@ -20,6 +20,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Random;
 
+import edu.princeton.cs.algs4.StdAudio;
+
 public class GUI {
     // Determines the range (0 - SLIDER) of values for the slider.
     public static volatile int SLIDER = 1000;
@@ -488,7 +490,7 @@ public class GUI {
             Utils.parallel((cpu, cpus) -> {
                 for (int y = height - 1 - cpu; y >= 0; y -= cpus) {
                     for (int x = 0; x < width; x++) {
-                        this.bufferedImage.setRGB(height - 1 - y, x, pixels[y * width + x]); // 具体改的地方是这里
+                        this.bufferedImage.setRGB(height - 1 - y, x, pixels[y * width + x]);
                     }
                 }
                 for (int y = cpu; y < height; y += cpus) {
@@ -557,5 +559,10 @@ public class GUI {
             height = icon.getIconHeight() / dims[0];
         }
         return new ImageIcon(icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST));
+    }
+
+    private void playBackgroundMusic() {
+        String audioFilePath = "background.wav"; // 确保这个路径指向了正确的音频文件
+        StdAudio.play(audioFilePath);
     }
 }
