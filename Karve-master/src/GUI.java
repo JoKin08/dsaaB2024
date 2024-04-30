@@ -138,23 +138,22 @@ public class GUI {
         recordingCheckBox.setFont(font);
         recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
         checkBoxPanel.add(recordingCheckBox);
-        // "Update" checkbox.
-        JCheckBox updateCheckBox = new JCheckBox("Update");
-        updateCheckBox.setFont(font);
-        updateCheckBox.setSelected(this.update);
-        updateCheckBox.addItemListener(e -> {
-            this.update = !this.update;
-            this.carver[this.idx].updateImage(this.highlight, SEAM_COLOR);
-            if (this.update) {
-                this.clearBufferedImage();
-                this.updateDisplayImage();
+        // "Play BGM" checkbox.
+        // "Play BGM" checkbox.
+        JCheckBox playBgmCheckBox = new JCheckBox("Play BGM");
+        playBgmCheckBox.setFont(new Font("Arial", Font.BOLD, 15));
+        playBgmCheckBox.setSelected(false); // 默认不选中
+        playBgmCheckBox.addItemListener(e -> {
+            if (playBgmCheckBox.isSelected()) {
+                playBackgroundMusic(); // 选中时播放音乐
+            } else {
+                stopBackgroundMusic(); // 未选中时播放静音音频
             }
-            this.carver[this.idx].setUpdate(this.update);
         });
-        checkBoxPanel.add(updateCheckBox);
+        checkBoxPanel.add(playBgmCheckBox);
 
         this.addKeyListeners(
-                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, updateCheckBox },
+                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, playBgmCheckBox },
                 new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
         menuPanel.add(checkBoxPanel);
@@ -199,7 +198,7 @@ public class GUI {
             removeButton.setEnabled(this.carving);
             snapshotButton.setEnabled(this.carving);
             highlightCheckBox.setEnabled(this.carving);
-            updateCheckBox.setEnabled(this.carving);
+            playBgmCheckBox.setEnabled(this.carving);
             recordingCheckBox.setEnabled(this.carving);
             horizontalCheckBox.setEnabled(this.carving);
             this.carving = !this.carving;
@@ -499,10 +498,13 @@ public class GUI {
             });
         } else {
             Utils.parallel((cpu, cpus) -> {
-                for (int y = 0; y < height; y++) {
+                for (int y = cpu; y < height; y += cpus) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
                     }
+                }
+                for (int y = cpu; y < height; y += cpus) {
+                    this.bufferedImage.setRGB(width - 1, y, 0xFF);
                 }
             });
         }
@@ -561,8 +563,15 @@ public class GUI {
         return new ImageIcon(icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST));
     }
 
+    // Plays the background music continuously.
     private void playBackgroundMusic() {
         String audioFilePath = "background.wav"; // 确保这个路径指向了正确的音频文件
         StdAudio.play(audioFilePath);
     }
+
+    // Stops playing the background music.
+    private void stopBackgroundMusic() {
+        StdAudio.play("silence.wav"); // 播放一个非常短的静音音频
+    }
+
 }
