@@ -519,7 +519,6 @@ public class GUI {
 
         if (this.grayscale) {
             int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height)); // 调用Utils.java中的grayscale函数，将RGB像素数组转换为灰度图像
-            System.out.println(grayPixels.length+" "+grayPixels[0].length+" "+width+" "+height);
             Utils.parallel((cpu, cpus) -> {
                 for (int y = 0; y < height; y++) {
                     for (int x = 0; x < width; x++) {
