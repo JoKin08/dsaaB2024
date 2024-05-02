@@ -20,8 +20,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Random;
 
-import edu.princeton.cs.algs4.StdAudio;
-
 public class GUI {
     // Determines the range (0 - SLIDER) of values for the slider.
     public static volatile int SLIDER = 1000;
@@ -45,6 +43,8 @@ public class GUI {
     private boolean recording;
     // Flag storing whether the display image should be updated.
     private boolean update;
+    // Flag storing whether the display image should be grayscale.
+    private boolean grayscale;
     // The direction the carving animation plays. Removing -> False, Adding -> True.
     private boolean direction;
     // Flag that determines whether removed/added seams should be colored.
@@ -70,6 +70,7 @@ public class GUI {
         this.carver = new SeamCarver[] { null, null };
         this.factory = new SeamCarverFactory();
         this.update = true;
+        this.grayscale = false;
 
         JFrame frame = new JFrame("DSAAB Group22");
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -138,23 +139,20 @@ public class GUI {
         recordingCheckBox.setFont(font);
         recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
         checkBoxPanel.add(recordingCheckBox);
-        // "Update" checkbox.
-        JCheckBox updateCheckBox = new JCheckBox("Update");
-        updateCheckBox.setFont(font);
-        updateCheckBox.setSelected(this.update);
-        updateCheckBox.addItemListener(e -> {
-            this.update = !this.update;
-            this.carver[this.idx].updateImage(this.highlight, SEAM_COLOR);
-            if (this.update) {
-                this.clearBufferedImage();
+        // "Grayscale" checkbox.
+        JCheckBox grayscaleCheckBox = new JCheckBox("Grayscale");
+        grayscaleCheckBox.setFont(font);
+        grayscaleCheckBox.addItemListener(e -> {
+            this.grayscale = !this.grayscale;
+            this.clearBufferedImage();
+            if (this.update)
                 this.updateDisplayImage();
-            }
-            this.carver[this.idx].setUpdate(this.update);
+            frame.setTitle("Seam-Carving - " + "grayscale");
         });
-        checkBoxPanel.add(updateCheckBox);
+        checkBoxPanel.add(grayscaleCheckBox);
 
         this.addKeyListeners(
-                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, updateCheckBox },
+                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, grayscaleCheckBox },
                 new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
         menuPanel.add(checkBoxPanel);
@@ -199,7 +197,7 @@ public class GUI {
             removeButton.setEnabled(this.carving);
             snapshotButton.setEnabled(this.carving);
             highlightCheckBox.setEnabled(this.carving);
-            updateCheckBox.setEnabled(this.carving);
+            grayscaleCheckBox.setEnabled(this.carving);
             recordingCheckBox.setEnabled(this.carving);
             horizontalCheckBox.setEnabled(this.carving);
             this.carving = !this.carving;
@@ -301,6 +299,18 @@ public class GUI {
             Utils.delay(SLIDER - slider.getValue());
         }
     }
+
+    private int[][] convertTo2D(int[] pixels, int width, int height) {
+        int[][] result = new int[height][width];
+    
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                result[i][j] = pixels[i * width + j];
+            }
+        }
+    
+        return result;
+    }    
 
     /*
      * Clears the display image by making all pixels transparent.
@@ -507,6 +517,28 @@ public class GUI {
             });
         }
 
+        if (this.grayscale) {
+            int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height)); // 调用Utils.java中的grayscale函数，将RGB像素数组转换为灰度图像
+            System.out.println(grayPixels.length+" "+grayPixels[0].length+" "+width+" "+height);
+            Utils.parallel((cpu, cpus) -> {
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        int grayValue = grayPixels[y][x]; // 获取灰度图像中指定位置的像素值
+                        int grayPixel = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue; // 构造灰度像素值，alpha通道为255
+                        this.bufferedImage.setRGB(x, y, grayPixel); // 在bufferedImage中设置灰度像素值
+                    }
+                }
+            });
+        } else {
+            Utils.parallel((cpu, cpus) -> {
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
+                    }
+                }
+            });
+        }
+
         return new ImageIcon(this.bufferedImage.getScaledInstance(
                 Utils.max(this.scaleW, 1),
                 Utils.max(this.scaleH, 1),
@@ -559,10 +591,5 @@ public class GUI {
             height = icon.getIconHeight() / dims[0];
         }
         return new ImageIcon(icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST));
-    }
-
-    private void playBackgroundMusic() {
-        String audioFilePath = "background.wav"; // 确保这个路径指向了正确的音频文件
-        StdAudio.play(audioFilePath);
     }
 }
