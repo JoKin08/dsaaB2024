@@ -7,6 +7,8 @@
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
+
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
@@ -19,8 +21,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Random;
-
-import edu.princeton.cs.algs4.StdAudio;
 
 public class GUI {
     // Determines the range (0 - SLIDER) of values for the slider.
@@ -45,6 +45,8 @@ public class GUI {
     private boolean recording;
     // Flag storing whether the display image should be updated.
     private boolean update;
+    // Flag storing whether the display image should be grayscale.
+    private boolean grayscale;
     // The direction the carving animation plays. Removing -> False, Adding -> True.
     private boolean direction;
     // Flag that determines whether removed/added seams should be colored.
@@ -70,16 +72,29 @@ public class GUI {
         this.carver = new SeamCarver[] { null, null };
         this.factory = new SeamCarverFactory();
         this.update = true;
+        this.grayscale = false;
 
         JFrame frame = new JFrame("DSAAB Group22");
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel containerPanel = new JPanel(new BorderLayout());
+        JPanel menuPanel = new JPanel(new FlowLayout());
+        JPanel panel = new JPanel(new FlowLayout());
+        JPanel controlPanel = new JPanel(new FlowLayout());
+
+        containerPanel.add(menuPanel, BorderLayout.SOUTH);
+        containerPanel.add(panel, BorderLayout.NORTH);
+        containerPanel.add(controlPanel, BorderLayout.CENTER);
+
+        containerPanel.setBackground(new Color(255, 255, 224));
+        panel.setOpaque(false);
+        menuPanel.setOpaque(false);
+        controlPanel.setOpaque(false);
 
         // Add the display image showing the image being carved.
-        this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4), JLabel.CENTER);
+        this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4),
+                JLabel.CENTER);
         panel.add(this.displayImage);
 
         // The menuPanel stores all the buttons, checkboxes and the slider.
-        JPanel menuPanel = new JPanel();
 
         // Add File Drag and Drop to the Image Label.
         this.addDropTarget(frame, menuPanel);
@@ -87,14 +102,17 @@ public class GUI {
         this.addMouseListener();
 
         // Add the "Karve" logo.
-        JPanel titlePanel = new JPanel();
-        JLabel title = new JLabel(icon("logo.png", ICON_SIZE * 3 / 4), JLabel.CENTER);
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        titlePanel.setOpaque(false);
+        JLabel title = new JLabel(icon("logo.png", ICON_SIZE * 3 / 4),
+                JLabel.CENTER);
         // Add "title" to a JPanel to center it.
         titlePanel.add(title);
-        menuPanel.add(titlePanel);
+        controlPanel.add(titlePanel);
 
         // Add the slider.
-        JPanel sliderPanel = new JPanel();
+        JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        sliderPanel.setOpaque(false);
         JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER, SLIDER / 2);
         slider.setFocusable(false);
         ImageIcon[] speeds = new ImageIcon[] {
@@ -103,16 +121,19 @@ public class GUI {
                 icon("speed3.png")
         };
         JLabel speedometer = new JLabel(speeds[1], JLabel.CENTER);
-        slider.addChangeListener(e -> speedometer.setIcon(speeds[slider.getValue() / (SLIDER / speeds.length + 1)]));
+        slider.addChangeListener(e -> speedometer.setIcon(speeds[slider.getValue() /
+                (SLIDER / speeds.length + 1)]));
         sliderPanel.add(speedometer);
         sliderPanel.add(slider);
-        menuPanel.add(sliderPanel);
+        controlPanel.add(sliderPanel);
 
         // Add the checkboxes for "Show Seams", "Horizontal", and "Record".
         // "Show Seams" checkbox.
         Font font = new Font("Arial", Font.BOLD, 15);
-        JPanel checkBoxPanel = new JPanel(new GridLayout(2, 2));
+        JPanel checkBoxPanel = new JPanel(new GridLayout(1, 4));
+        checkBoxPanel.setOpaque(false);
         JCheckBox highlightCheckBox = new JCheckBox("Show Seams");
+        highlightCheckBox.setOpaque(false);
         highlightCheckBox.setFont(font);
         highlightCheckBox.addItemListener(e -> {
             this.highlight = !this.highlight;
@@ -122,6 +143,7 @@ public class GUI {
         checkBoxPanel.add(highlightCheckBox);
         // "Horizontal" checkbox.
         JCheckBox horizontalCheckBox = new JCheckBox("Horizontal");
+        horizontalCheckBox.setOpaque(false);
         horizontalCheckBox.setFont(font);
         horizontalCheckBox.addItemListener(e -> {
             this.horizontal = !this.horizontal;
@@ -130,50 +152,62 @@ public class GUI {
             if (this.update)
                 this.updateDisplayImage();
             SeamCarver carver = this.carver[this.idx];
-            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " +
+                    carver.getHeight());
         });
         checkBoxPanel.add(horizontalCheckBox);
         // "Recording" checkbox.
         JCheckBox recordingCheckBox = new JCheckBox("Recording");
+        recordingCheckBox.setOpaque(false);
         recordingCheckBox.setFont(font);
         recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
         checkBoxPanel.add(recordingCheckBox);
-        // "Play BGM" checkbox.
-        // "Play BGM" checkbox.
-        JCheckBox playBgmCheckBox = new JCheckBox("Play BGM");
-        playBgmCheckBox.setFont(new Font("Arial", Font.BOLD, 15));
-        playBgmCheckBox.setSelected(false); // 默认不选中
-        playBgmCheckBox.addItemListener(e -> {
-            if (playBgmCheckBox.isSelected()) {
-                playBackgroundMusic(); // 选中时播放音乐
-            } else {
-                stopBackgroundMusic(); // 未选中时播放静音音频
-            }
+        // "Grayscale" checkbox.
+        JCheckBox grayscaleCheckBox = new JCheckBox("Grayscale");
+        grayscaleCheckBox.setOpaque(false);
+        grayscaleCheckBox.setFont(font);
+        grayscaleCheckBox.addItemListener(e -> {
+            this.grayscale = !this.grayscale;
+            this.clearBufferedImage();
+            if (this.update)
+                this.updateDisplayImage();
+            frame.setTitle("Seam-Carving - " + "grayscale");
         });
-        checkBoxPanel.add(playBgmCheckBox);
+        checkBoxPanel.add(grayscaleCheckBox);
 
         this.addKeyListeners(
-                new AbstractButton[] { highlightCheckBox, horizontalCheckBox, recordingCheckBox, playBgmCheckBox },
+                new AbstractButton[] { highlightCheckBox, horizontalCheckBox,
+                        recordingCheckBox, grayscaleCheckBox },
                 new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
+        JPanel spacer1 = new JPanel();
+        spacer1.setPreferredSize(new Dimension(100, 20)); // 设置首选大小
+        spacer1.setOpaque(false); // 设置为透明，使得背景不显示
         menuPanel.add(checkBoxPanel);
+        menuPanel.add(spacer1);
 
         // Add all "Pause/Play", "Add", "Remove" and "Snapshot" buttons.
-        JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 5));
+        buttonPanel.setOpaque(false);
         ImageIcon play = icon("play.png");
         ImageIcon pause = icon("pause.png");
         JButton playButton = new JButton("Animate Seams");
+        playButton.setOpaque(false);
         playButton.setIcon(play);
         JButton addButton = new JButton("Add Seam");
+        addButton.setOpaque(false);
         addButton.setIcon(icon("add.png"));
         JButton removeButton = new JButton("Remove Seam");
+        removeButton.setOpaque(false);
         removeButton.setIcon(icon("remove.png"));
         JButton snapshotButton = new JButton("Snapshot");
+        snapshotButton.setOpaque(false);
         snapshotButton.setIcon(icon("snapshot.png"));
 
         this.addKeyListeners(
                 new AbstractButton[] { playButton, addButton, removeButton, snapshotButton },
-                new int[] { KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_C });
+                new int[] { KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT,
+                        KeyEvent.VK_C });
 
         // Function to run in separate thread when the "Play" button is pressed.
         Runnable animate = () -> {
@@ -198,7 +232,7 @@ public class GUI {
             removeButton.setEnabled(this.carving);
             snapshotButton.setEnabled(this.carving);
             highlightCheckBox.setEnabled(this.carving);
-            playBgmCheckBox.setEnabled(this.carving);
+            grayscaleCheckBox.setEnabled(this.carving);
             recordingCheckBox.setEnabled(this.carving);
             horizontalCheckBox.setEnabled(this.carving);
             this.carving = !this.carving;
@@ -236,7 +270,7 @@ public class GUI {
                 frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
-        // Create a snapshot of the current image when the "Snapshot" button is clicked.
+        // Create a snapshot of the current image when the "Snapshot" button is
         snapshotButton.addActionListener(e -> {
             if (!this.recording)
                 captureSnapshot();
@@ -246,19 +280,158 @@ public class GUI {
         buttonPanel.add(removeButton);
         buttonPanel.add(snapshotButton);
 
+        JPanel spacer2 = new JPanel();
+        spacer2.setPreferredSize(new Dimension(100, 40)); // 设置首选大小
+        spacer2.setOpaque(false); // 设置为透明，使得背景不显示
+
         menuPanel.add(buttonPanel);
+        menuPanel.add(spacer2);
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         this.setEnabled(menuPanel, false);
 
-        panel.add(menuPanel);
+        // panel.add(menuPanel);
 
-        frame.add(panel);
+        frame.add(containerPanel);
         frame.pack();
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setVisible(true);
+    }
+
+    // public GUI() {
+    // this.carver = new SeamCarver[] { null, null };
+    // this.factory = new SeamCarverFactory();
+    // this.update = true;
+    // this.grayscale = false;
+
+    // JFrame frame = new JFrame("DSAAB Group22");
+    // frame.setLayout(new BorderLayout()); // 设置整体布局为BorderLayout
+
+    // // 添加展示图像区域
+    // JPanel displayPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    // this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4),
+    // JLabel.CENTER);
+    // displayPanel.add(this.displayImage);
+    // frame.add(displayPanel, BorderLayout.NORTH); // 把拖拽区域放在顶部
+
+    // // 控制元素面板，包含logo、滑动条、复选框和按钮
+    // JPanel controlPanel = new JPanel();
+    // controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS)); //
+    // 使用垂直布局
+
+    // // 添加Logo
+    // JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    // JLabel title = new JLabel(icon("logo.png", ICON_SIZE * 3 / 4),
+    // JLabel.CENTER);
+    // titlePanel.add(title);
+    // controlPanel.add(titlePanel);
+
+    // // 添加滑动条
+    // JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    // JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER, SLIDER / 2);
+    // slider.setFocusable(false);
+    // ImageIcon[] speeds = { icon("speed1.png"), icon("speed2.png"),
+    // icon("speed3.png") };
+    // JLabel speedometer = new JLabel(speeds[1], JLabel.CENTER);
+    // slider.addChangeListener(e -> speedometer.setIcon(speeds[slider.getValue() /
+    // (SLIDER / speeds.length + 1)]));
+    // sliderPanel.add(speedometer);
+    // sliderPanel.add(slider);
+    // controlPanel.add(sliderPanel);
+
+    // // 添加复选框
+    // JPanel checkBoxPanel = new JPanel(new GridLayout(2, 2));
+    // Font font = new Font("Arial", Font.BOLD, 15);
+    // JCheckBox highlightCheckBox = new JCheckBox("Show Seams");
+    // highlightCheckBox.setFont(font);
+    // highlightCheckBox.addItemListener(e -> {
+    // this.highlight = !this.highlight;
+    // this.carver[this.idx].updateImage(this.highlight, SEAM_COLOR);
+    // this.updateDisplayImage();
+    // });
+    // checkBoxPanel.add(highlightCheckBox);
+    // JCheckBox horizontalCheckBox = new JCheckBox("Horizontal");
+    // horizontalCheckBox.setFont(font);
+    // horizontalCheckBox.addItemListener(e -> {
+    // this.horizontal = !this.horizontal;
+    // this.idx = this.horizontal ? 1 : 0;
+    // this.clearBufferedImage();
+    // if (this.update)
+    // this.updateDisplayImage();
+    // SeamCarver carver = this.carver[this.idx];
+    // frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " +
+    // carver.getHeight());
+    // });
+    // checkBoxPanel.add(horizontalCheckBox);
+    // JCheckBox recordingCheckBox = new JCheckBox("Recording");
+    // recordingCheckBox.setFont(font);
+    // recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
+    // checkBoxPanel.add(recordingCheckBox);
+    // JCheckBox grayscaleCheckBox = new JCheckBox("Grayscale");
+    // grayscaleCheckBox.setFont(font);
+    // grayscaleCheckBox.addItemListener(e -> {
+    // this.grayscale = !this.grayscale;
+    // this.clearBufferedImage();
+    // if (this.update)
+    // this.updateDisplayImage();
+    // frame.setTitle("Seam-Carving - " + "grayscale");
+    // });
+    // checkBoxPanel.add(grayscaleCheckBox);
+    // controlPanel.add(checkBoxPanel);
+
+    // // 添加按钮
+    // JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
+    // JButton playButton = new JButton("Animate Seams", icon("play.png"));
+    // JButton addButton = new JButton("Add Seam", icon("add.png"));
+    // JButton removeButton = new JButton("Remove Seam", icon("remove.png"));
+    // JButton snapshotButton = new JButton("Snapshot", icon("snapshot.png"));
+    // buttonPanel.add(playButton);
+    // buttonPanel.add(addButton);
+    // buttonPanel.add(removeButton);
+    // buttonPanel.add(snapshotButton);
+    // controlPanel.add(buttonPanel);
+
+    // frame.add(controlPanel, BorderLayout.CENTER); // 将控制元素面板添加到中部
+
+    // // 设置窗口属性
+    // this.addDropTarget(frame, displayPanel);
+    // frame.pack();
+    // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    // frame.setLocationRelativeTo(null);
+    // frame.setResizable(false);
+    // frame.setVisible(true);
+    // }
+
+    private void addCheckBox(String label, Font font, JPanel panel) {
+        JCheckBox checkBox = new JCheckBox(label);
+        checkBox.setFont(font);
+        checkBox.addItemListener(e -> {
+            // 根据复选框的种类更新状态
+            switch (label) {
+                case "Show Seams":
+                    this.highlight = !this.highlight;
+                    break;
+                case "Horizontal":
+                    this.horizontal = !this.horizontal;
+                    break;
+                case "Recording":
+                    this.recording = !this.recording;
+                    break;
+                case "Grayscale":
+                    this.grayscale = !this.grayscale;
+                    break;
+            }
+            this.updateDisplayImage(); // 根据需要更新显示
+        });
+        panel.add(checkBox);
+    }
+
+    private void addControlButton(String text, ImageIcon icon, JPanel panel) {
+        JButton button = new JButton(text);
+        button.setIcon(icon);
+        panel.add(button);
     }
 
     /*
@@ -299,6 +472,18 @@ public class GUI {
             frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
+    }
+
+    private int[][] convertTo2D(int[] pixels, int width, int height) {
+        int[][] result = new int[height][width];
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                result[i][j] = pixels[i * width + j];
+            }
+        }
+
+        return result;
     }
 
     /*
@@ -485,8 +670,23 @@ public class GUI {
         int height = carver.getHeight();
 
         int[] pixels = carver.getImage();
-        if (this.horizontal) {
-            Utils.parallel((cpu, cpus) -> {
+
+        Utils.parallel((cpu, cpus) -> {
+            if (this.horizontal && this.grayscale) {
+                // 同时应用水平和灰度处理
+                int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height));
+                for (int y = height - 1 - cpu; y >= 0; y -= cpus) {
+                    for (int x = 0; x < width; x++) {
+                        int grayValue = grayPixels[y][x];
+                        int grayPixel = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue;
+                        this.bufferedImage.setRGB(height - 1 - y, x, grayPixel);
+                    }
+                }
+                for (int y = cpu; y < height; y += cpus) {
+                    this.bufferedImage.setRGB(y, width - 1, 0xFF);
+                }
+            } else if (this.horizontal) {
+                // 仅应用水平处理
                 for (int y = height - 1 - cpu; y >= 0; y -= cpus) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(height - 1 - y, x, pixels[y * width + x]);
@@ -495,19 +695,24 @@ public class GUI {
                 for (int y = cpu; y < height; y += cpus) {
                     this.bufferedImage.setRGB(y, width - 1, 0xFF);
                 }
-            });
-        } else {
-            Utils.parallel((cpu, cpus) -> {
-                for (int y = cpu; y < height; y += cpus) {
+            } else if (this.grayscale) {
+                // 仅应用灰度处理
+                int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height));
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        int grayValue = grayPixels[y][x];
+                        int grayPixel = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue;
+                        this.bufferedImage.setRGB(x, y, grayPixel);
+                    }
+                }
+            } else {
+                for (int y = 0; y < height; y++) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
                     }
                 }
-                for (int y = cpu; y < height; y += cpus) {
-                    this.bufferedImage.setRGB(width - 1, y, 0xFF);
-                }
-            });
-        }
+            }
+        });
 
         return new ImageIcon(this.bufferedImage.getScaledInstance(
                 Utils.max(this.scaleW, 1),
@@ -562,16 +767,4 @@ public class GUI {
         }
         return new ImageIcon(icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST));
     }
-
-    // Plays the background music continuously.
-    private void playBackgroundMusic() {
-        String audioFilePath = "background.wav"; // 确保这个路径指向了正确的音频文件
-        StdAudio.play(audioFilePath);
-    }
-
-    // Stops playing the background music.
-    private void stopBackgroundMusic() {
-        StdAudio.play("silence.wav"); // 播放一个非常短的静音音频
-    }
-
 }
