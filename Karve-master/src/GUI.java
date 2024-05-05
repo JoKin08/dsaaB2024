@@ -454,6 +454,18 @@ public class GUI {
         }
     }
 
+    private int[][] convertTo2D(int[] pixels, int width, int height) {
+        int[][] result = new int[height][width];
+    
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                result[i][j] = pixels[i * width + j];
+            }
+        }
+    
+        return result;
+    } 
+
     /*
      * Remove Seams from the image when using the animate feature.
      *
@@ -694,10 +706,13 @@ public class GUI {
                     }
                 }
             } else {
-                for (int y = 0; y < height; y++) {
+                for (int y = cpu; y < height; y += cpus) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
                     }
+                }
+                for (int y = cpu; y < height; y += cpus) {
+                    this.bufferedImage.setRGB(width - 1, y, 0xFF);
                 }
             }
         });
