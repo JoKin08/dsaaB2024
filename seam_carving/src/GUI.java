@@ -16,7 +16,7 @@ import java.util.Random;
 
 public class GUI {
     public static volatile int SLIDER = 1000;
-    public static final int SEAM_COLOR = new Color(88, 150, 236).getRGB();
+    public static final int SEAM_COLOR = new Color(88, 150, 236).getRGB(); // 接缝颜色设置成蓝色
     public static String ICONS_FOLDER = "Icons";
     public static final int ICON_SIZE = 30;
     public static final EnergyType ENERGY_TYPE = EnergyType.BACKWARD; // Seam Carving的能量类型：前进或后退
@@ -27,7 +27,7 @@ public class GUI {
     private boolean recording;
     private boolean update;
     private boolean grayscale;
-    private boolean direction; // Seam的方向：Removing = False, Adding = True.
+    private boolean direction; // Seam的方向：Removing = False, Adding = True
     private boolean highlight;
     private boolean horizontal; // 水平（True）或垂直（False）Seam Carver
     private int count; // 用于保存快照的计数器
@@ -45,10 +45,10 @@ public class GUI {
         this.grayscale = false;
 
         JFrame frame = new JFrame("DSAAB Group22");
-        JPanel containerPanel = new JPanel(new BorderLayout());
-        JPanel menuPanel = new JPanel(new FlowLayout()); // menuPanel 存储所有按钮、复选框和滑块
-        JPanel panel = new JPanel(new FlowLayout());
-        JPanel controlPanel = new JPanel(new FlowLayout());
+        JPanel containerPanel = new JPanel(new BorderLayout()); // containerPanel 包含所有其他面板
+        JPanel menuPanel = new JPanel(new FlowLayout()); // menuPanel 存储所有按钮和复选框
+        JPanel panel = new JPanel(new FlowLayout()); // panel 用于显示图像
+        JPanel controlPanel = new JPanel(new FlowLayout()); // controlPanel 包含滑动条和标题
 
         containerPanel.add(menuPanel, BorderLayout.SOUTH);
         containerPanel.add(panel, BorderLayout.NORTH);
@@ -63,7 +63,6 @@ public class GUI {
         this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4),
                 JLabel.CENTER);
         panel.add(this.displayImage);
-
 
         // 添加展示dragdrop图像的区域
         this.addDropTarget(frame, menuPanel);
@@ -147,8 +146,9 @@ public class GUI {
                         recordingCheckBox, grayscaleCheckBox },
                 new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
+        // 用于美化界面的空白区域
         JPanel spacer1 = new JPanel();
-        spacer1.setPreferredSize(new Dimension(100, 20)); 
+        spacer1.setPreferredSize(new Dimension(100, 20));
         spacer1.setOpaque(false);
         menuPanel.add(checkBoxPanel);
         menuPanel.add(spacer1);
@@ -179,8 +179,8 @@ public class GUI {
         // 按下“播放”按钮时运行的函数
         Runnable animate = () -> {
             // 一直carve图像，直到图像完全消失
-             // 然后通过移除的seam重建图像
-             // 持续重复直到用户停止carve
+            // 然后通过移除的seam重建图像
+            // 持续重复直到用户停止carve
             while (this.carving) {
                 if (this.direction) {
                     this.carveAdd(frame, slider);
@@ -247,8 +247,9 @@ public class GUI {
         buttonPanel.add(removeButton);
         buttonPanel.add(snapshotButton);
 
+        // 用于美化界面的空白区域
         JPanel spacer2 = new JPanel();
-        spacer2.setPreferredSize(new Dimension(100, 40)); 
+        spacer2.setPreferredSize(new Dimension(100, 40));
         spacer2.setOpaque(false);
 
         menuPanel.add(buttonPanel);
@@ -294,15 +295,15 @@ public class GUI {
     // 将以一维数组表示的像素转换为二维数组
     private int[][] convertTo2D(int[] pixels, int width, int height) {
         int[][] result = new int[height][width];
-    
+
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 result[i][j] = pixels[i * width + j];
             }
         }
-    
+
         return result;
-    } 
+    }
 
     // 清除缓冲图像
     private void clearBufferedImage() {
@@ -338,10 +339,14 @@ public class GUI {
                     return;
                 try {
                     evt.acceptDrop(DnDConstants.ACTION_COPY);
-                    List<File> droppedFiles = (List) evt
-                            .getTransferable()
+                    List<File> droppedFiles = (List) evt.getTransferable()
                             .getTransferData(DataFlavor.javaFileListFlavor);
                     File image = droppedFiles.get(0);
+                    if (!image.getName().endsWith(".png") && !image.getName().endsWith(".jpg") &&
+                            !image.getName().endsWith(".jpeg") && !image.getName().endsWith(".gif")) {
+                        evt.dropComplete(false);
+                        return;
+                    }
                     // 创建水平/竖直Seam Carver
                     carver[0] = factory.create(image, false, ENERGY_TYPE);
                     carver[1] = factory.create(image, true, ENERGY_TYPE);
@@ -403,8 +408,8 @@ public class GUI {
                 int imageWidth = bufferedImage.getWidth(), imageHeight = bufferedImage.getHeight();
                 float labelStepW = (float) imageWidth / displayImage.getWidth();
                 float labelStepH = (float) imageHeight / displayImage.getHeight();
-                int cX = (int) (x * labelStepW + 0.5f); 
-                int cY = (int) (y * labelStepH + 0.5f); 
+                int cX = (int) (x * labelStepW + 0.5f);
+                int cY = (int) (y * labelStepH + 0.5f);
                 if (horizontal) {
                     int temp1 = cX;
                     cX = cY;
@@ -469,7 +474,7 @@ public class GUI {
             } else if (this.grayscale) {
                 // 仅应用灰度处理
                 int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height));
-                for (int y = cpu; y < height; y+= cpus) {
+                for (int y = cpu; y < height; y += cpus) {
                     for (int x = 0; x < width; x++) {
                         int grayValue = grayPixels[y][x];
                         int grayPixel = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue;

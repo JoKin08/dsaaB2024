@@ -2,6 +2,8 @@ import java.io.File;
 import java.util.Locale;
 import java.util.Scanner;
 
+// Console类使用户能够通过控制台输入进行交互，来指定如何修改图像
+
 public class Console {
     public static void main(String[] args) {
         System.out.println("Welcome to Karve!\n");
