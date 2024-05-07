@@ -1,0 +1,9 @@
+# Directories
+/.idea
+/out
+/Snapshots
+/src/META-INF
+
+# Files
+*.iml
+*.mp4
