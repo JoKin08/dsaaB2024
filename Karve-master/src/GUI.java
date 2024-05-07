@@ -1,13 +1,5 @@
-/*
- * GUI
- * Alex Eidt
- * Runs the Graphical User Interface (GUI) window that allows the user
- * to interface with the Karver.
- */
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -23,50 +15,28 @@ import java.util.List;
 import java.util.Random;
 
 public class GUI {
-    // Determines the range (0 - SLIDER) of values for the slider.
     public static volatile int SLIDER = 1000;
-    // Color of the seams (if highlighting).
     public static final int SEAM_COLOR = new Color(88, 150, 236).getRGB();
-    // File path to the Icons folder.
     public static String ICONS_FOLDER = "Icons";
-    // Size of the button icons.
     public static final int ICON_SIZE = 30;
-    // Energy Type to use for Seam Carving. Either Forward or Backward.
-    public static final EnergyType ENERGY_TYPE = EnergyType.BACKWARD;
-    // If true, crop snapshots, otherwise all snapshots have same size.
+    public static final EnergyType ENERGY_TYPE = EnergyType.BACKWARD; // Seam Carving的能量类型：前进或后退
     public static final boolean CROP_SNAPSHOT = false;
 
-    // Determines the width of the "brush" used to mark the priority mask by
-    // clicking on the image.
-    private int brushWidth;
-    // Flag storing whether the carving animation is happening.
+    private int brushWidth; // 确定用于标记优先级掩码的画笔的宽度
     private boolean carving;
-    // Flag storing whether the carving is being recorded.
     private boolean recording;
-    // Flag storing whether the display image should be updated.
     private boolean update;
-    // Flag storing whether the display image should be grayscale.
     private boolean grayscale;
-    // The direction the carving animation plays. Removing -> False, Adding -> True.
-    private boolean direction;
-    // Flag that determines whether removed/added seams should be colored.
+    private boolean direction; // Seam的方向：Removing = False, Adding = True.
     private boolean highlight;
-    // Flag that determines whether horizontal or vertical seam carving happens.
-    private boolean horizontal;
-    // Track frame numbers when recording or taking snapshots.
-    private int count;
-    // Scaling factors for display image.
-    private int scaleW, scaleH;
-    // The display image.
-    private final JLabel displayImage;
-    // Stores the vertical and horizontal Seam Carvers.
-    private final SeamCarver[] carver;
-    // The index of the current Seam Carver in "this.carver".
-    private int idx;
-    // Create Seam Carvers.
-    private final SeamCarverFactory factory;
-    // Buffered Image for display.
-    private BufferedImage bufferedImage;
+    private boolean horizontal; // 水平（True）或垂直（False）Seam Carver
+    private int count; // 用于保存快照的计数器
+    private int scaleW, scaleH; // 显示图像的缩放比例
+    private final JLabel displayImage; // 用于显示图像的JLabel
+    private final SeamCarver[] carver; // 用于存储Seam Carver的数组
+    private int idx; // 用于指示当前Seam Carver的索引
+    private final SeamCarverFactory factory; // 用于创建Seam Carver
+    private BufferedImage bufferedImage; // 用于显示图像的缓冲图像
 
     public GUI() {
         this.carver = new SeamCarver[] { null, null };
@@ -76,7 +46,7 @@ public class GUI {
 
         JFrame frame = new JFrame("DSAAB Group22");
         JPanel containerPanel = new JPanel(new BorderLayout());
-        JPanel menuPanel = new JPanel(new FlowLayout());
+        JPanel menuPanel = new JPanel(new FlowLayout()); // menuPanel 存储所有按钮、复选框和滑块
         JPanel panel = new JPanel(new FlowLayout());
         JPanel controlPanel = new JPanel(new FlowLayout());
 
@@ -89,28 +59,25 @@ public class GUI {
         menuPanel.setOpaque(false);
         controlPanel.setOpaque(false);
 
-        // Add the display image showing the image being carved.
+        // 添加显示图像，显示carving的图像
         this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4),
                 JLabel.CENTER);
         panel.add(this.displayImage);
 
-        // The menuPanel stores all the buttons, checkboxes and the slider.
 
-        // Add File Drag and Drop to the Image Label.
+        // 添加展示dragdrop图像的区域
         this.addDropTarget(frame, menuPanel);
-        // Add Priority Masking with Mouse Clicking to Image Label.
         this.addMouseListener();
 
-        // Add the "Karve" logo.
+        // 显示我们的logo和title
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         titlePanel.setOpaque(false);
         JLabel title = new JLabel(icon("logo.png", ICON_SIZE * 3 / 4),
                 JLabel.CENTER);
-        // Add "title" to a JPanel to center it.
         titlePanel.add(title);
         controlPanel.add(titlePanel);
 
-        // Add the slider.
+        // 添加滑动条
         JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         sliderPanel.setOpaque(false);
         JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER, SLIDER / 2);
@@ -127,8 +94,8 @@ public class GUI {
         sliderPanel.add(slider);
         controlPanel.add(sliderPanel);
 
-        // Add the checkboxes for "Show Seams", "Horizontal", and "Record".
-        // "Show Seams" checkbox.
+        // 添加“显示接缝”、“水平”、“记录”、“灰度”复选框
+        // 显示接缝
         Font font = new Font("Arial", Font.BOLD, 15);
         JPanel checkBoxPanel = new JPanel(new GridLayout(1, 4));
         checkBoxPanel.setOpaque(false);
@@ -141,7 +108,7 @@ public class GUI {
             this.updateDisplayImage();
         });
         checkBoxPanel.add(highlightCheckBox);
-        // "Horizontal" checkbox.
+        // 水平
         JCheckBox horizontalCheckBox = new JCheckBox("Horizontal");
         horizontalCheckBox.setOpaque(false);
         horizontalCheckBox.setFont(font);
@@ -156,13 +123,13 @@ public class GUI {
                     carver.getHeight());
         });
         checkBoxPanel.add(horizontalCheckBox);
-        // "Recording" checkbox.
+        // 记录
         JCheckBox recordingCheckBox = new JCheckBox("Recording");
         recordingCheckBox.setOpaque(false);
         recordingCheckBox.setFont(font);
         recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
         checkBoxPanel.add(recordingCheckBox);
-        // "Grayscale" checkbox.
+        // 灰度
         JCheckBox grayscaleCheckBox = new JCheckBox("Grayscale");
         grayscaleCheckBox.setOpaque(false);
         grayscaleCheckBox.setFont(font);
@@ -181,12 +148,12 @@ public class GUI {
                 new int[] { KeyEvent.VK_S, KeyEvent.VK_H, KeyEvent.VK_R, KeyEvent.VK_U });
 
         JPanel spacer1 = new JPanel();
-        spacer1.setPreferredSize(new Dimension(100, 20)); // 设置首选大小
-        spacer1.setOpaque(false); // 设置为透明，使得背景不显示
+        spacer1.setPreferredSize(new Dimension(100, 20)); 
+        spacer1.setOpaque(false);
         menuPanel.add(checkBoxPanel);
         menuPanel.add(spacer1);
 
-        // Add all "Pause/Play", "Add", "Remove" and "Snapshot" buttons.
+        // 添加“暂停/播放”、“添加”、“删除”、“快照”按钮
         JPanel buttonPanel = new JPanel(new GridLayout(1, 5));
         buttonPanel.setOpaque(false);
         ImageIcon play = icon("play.png");
@@ -209,11 +176,11 @@ public class GUI {
                 new int[] { KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT,
                         KeyEvent.VK_C });
 
-        // Function to run in separate thread when the "Play" button is pressed.
+        // 按下“播放”按钮时运行的函数
         Runnable animate = () -> {
-            // Carve the image all the way until nothing is left.
-            // Then begin reconstructing the image by the seams that were removed
-            // and repeat until the user stops carving.
+            // 一直carve图像，直到图像完全消失
+             // 然后通过移除的seam重建图像
+             // 持续重复直到用户停止carve
             while (this.carving) {
                 if (this.direction) {
                     this.carveAdd(frame, slider);
@@ -226,7 +193,7 @@ public class GUI {
         };
 
         Thread[] thread = { new Thread(animate) };
-        // Manage animation thread when "Play/Pause" button is clicked.
+        // 单击“播放/暂停”按钮时
         playButton.addActionListener(e -> {
             addButton.setEnabled(this.carving);
             removeButton.setEnabled(this.carving);
@@ -244,7 +211,7 @@ public class GUI {
                 thread[0] = new Thread(animate);
             }
         });
-        // Add seam back when "Add" button is clicked.
+        // 单击“添加”按钮时
         addButton.addActionListener(e -> {
             this.direction = true;
             SeamCarver carver = this.carver[this.idx];
@@ -257,7 +224,7 @@ public class GUI {
                 frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
-        // Remove seam when "Remove" button is clicked.
+        // 单击“删除”按钮时
         removeButton.addActionListener(e -> {
             this.direction = false;
             SeamCarver carver = this.carver[this.idx];
@@ -270,7 +237,7 @@ public class GUI {
                 frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
-        // Create a snapshot of the current image when the "Snapshot" button is
+        // 单击“快照”按钮时
         snapshotButton.addActionListener(e -> {
             if (!this.recording)
                 captureSnapshot();
@@ -281,15 +248,13 @@ public class GUI {
         buttonPanel.add(snapshotButton);
 
         JPanel spacer2 = new JPanel();
-        spacer2.setPreferredSize(new Dimension(100, 40)); // 设置首选大小
-        spacer2.setOpaque(false); // 设置为透明，使得背景不显示
+        spacer2.setPreferredSize(new Dimension(100, 40)); 
+        spacer2.setOpaque(false);
 
         menuPanel.add(buttonPanel);
         menuPanel.add(spacer2);
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
         this.setEnabled(menuPanel, false);
-
-        // panel.add(menuPanel);
 
         frame.add(containerPanel);
         frame.pack();
@@ -300,148 +265,7 @@ public class GUI {
         frame.setVisible(true);
     }
 
-    // public GUI() {
-    // this.carver = new SeamCarver[] { null, null };
-    // this.factory = new SeamCarverFactory();
-    // this.update = true;
-    // this.grayscale = false;
-
-    // JFrame frame = new JFrame("DSAAB Group22");
-    // frame.setLayout(new BorderLayout()); // 设置整体布局为BorderLayout
-
-    // // 添加展示图像区域
-    // JPanel displayPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    // this.displayImage = new JLabel(icon("dragdrop.png", ICON_SIZE / 4),
-    // JLabel.CENTER);
-    // displayPanel.add(this.displayImage);
-    // frame.add(displayPanel, BorderLayout.NORTH); // 把拖拽区域放在顶部
-
-    // // 控制元素面板，包含logo、滑动条、复选框和按钮
-    // JPanel controlPanel = new JPanel();
-    // controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS)); //
-    // 使用垂直布局
-
-    // // 添加Logo
-    // JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    // JLabel title = new JLabel(icon("logo.png", ICON_SIZE * 3 / 4),
-    // JLabel.CENTER);
-    // titlePanel.add(title);
-    // controlPanel.add(titlePanel);
-
-    // // 添加滑动条
-    // JPanel sliderPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    // JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, SLIDER, SLIDER / 2);
-    // slider.setFocusable(false);
-    // ImageIcon[] speeds = { icon("speed1.png"), icon("speed2.png"),
-    // icon("speed3.png") };
-    // JLabel speedometer = new JLabel(speeds[1], JLabel.CENTER);
-    // slider.addChangeListener(e -> speedometer.setIcon(speeds[slider.getValue() /
-    // (SLIDER / speeds.length + 1)]));
-    // sliderPanel.add(speedometer);
-    // sliderPanel.add(slider);
-    // controlPanel.add(sliderPanel);
-
-    // // 添加复选框
-    // JPanel checkBoxPanel = new JPanel(new GridLayout(2, 2));
-    // Font font = new Font("Arial", Font.BOLD, 15);
-    // JCheckBox highlightCheckBox = new JCheckBox("Show Seams");
-    // highlightCheckBox.setFont(font);
-    // highlightCheckBox.addItemListener(e -> {
-    // this.highlight = !this.highlight;
-    // this.carver[this.idx].updateImage(this.highlight, SEAM_COLOR);
-    // this.updateDisplayImage();
-    // });
-    // checkBoxPanel.add(highlightCheckBox);
-    // JCheckBox horizontalCheckBox = new JCheckBox("Horizontal");
-    // horizontalCheckBox.setFont(font);
-    // horizontalCheckBox.addItemListener(e -> {
-    // this.horizontal = !this.horizontal;
-    // this.idx = this.horizontal ? 1 : 0;
-    // this.clearBufferedImage();
-    // if (this.update)
-    // this.updateDisplayImage();
-    // SeamCarver carver = this.carver[this.idx];
-    // frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " +
-    // carver.getHeight());
-    // });
-    // checkBoxPanel.add(horizontalCheckBox);
-    // JCheckBox recordingCheckBox = new JCheckBox("Recording");
-    // recordingCheckBox.setFont(font);
-    // recordingCheckBox.addItemListener(e -> this.recording = !this.recording);
-    // checkBoxPanel.add(recordingCheckBox);
-    // JCheckBox grayscaleCheckBox = new JCheckBox("Grayscale");
-    // grayscaleCheckBox.setFont(font);
-    // grayscaleCheckBox.addItemListener(e -> {
-    // this.grayscale = !this.grayscale;
-    // this.clearBufferedImage();
-    // if (this.update)
-    // this.updateDisplayImage();
-    // frame.setTitle("Seam-Carving - " + "grayscale");
-    // });
-    // checkBoxPanel.add(grayscaleCheckBox);
-    // controlPanel.add(checkBoxPanel);
-
-    // // 添加按钮
-    // JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
-    // JButton playButton = new JButton("Animate Seams", icon("play.png"));
-    // JButton addButton = new JButton("Add Seam", icon("add.png"));
-    // JButton removeButton = new JButton("Remove Seam", icon("remove.png"));
-    // JButton snapshotButton = new JButton("Snapshot", icon("snapshot.png"));
-    // buttonPanel.add(playButton);
-    // buttonPanel.add(addButton);
-    // buttonPanel.add(removeButton);
-    // buttonPanel.add(snapshotButton);
-    // controlPanel.add(buttonPanel);
-
-    // frame.add(controlPanel, BorderLayout.CENTER); // 将控制元素面板添加到中部
-
-    // // 设置窗口属性
-    // this.addDropTarget(frame, displayPanel);
-    // frame.pack();
-    // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    // frame.setLocationRelativeTo(null);
-    // frame.setResizable(false);
-    // frame.setVisible(true);
-    // }
-
-    private void addCheckBox(String label, Font font, JPanel panel) {
-        JCheckBox checkBox = new JCheckBox(label);
-        checkBox.setFont(font);
-        checkBox.addItemListener(e -> {
-            // 根据复选框的种类更新状态
-            switch (label) {
-                case "Show Seams":
-                    this.highlight = !this.highlight;
-                    break;
-                case "Horizontal":
-                    this.horizontal = !this.horizontal;
-                    break;
-                case "Recording":
-                    this.recording = !this.recording;
-                    break;
-                case "Grayscale":
-                    this.grayscale = !this.grayscale;
-                    break;
-            }
-            this.updateDisplayImage(); // 根据需要更新显示
-        });
-        panel.add(checkBox);
-    }
-
-    private void addControlButton(String text, ImageIcon icon, JPanel panel) {
-        JButton button = new JButton(text);
-        button.setIcon(icon);
-        panel.add(button);
-    }
-
-    /*
-     * Add Seams back to the image when using the animate feature.
-     *
-     * @param frame The UI Window. The title is updated to reflect the current size
-     * of the image.
-     * 
-     * @param slider The slider used to determine animation speed.
-     */
+    // 添加seam
     private void carveAdd(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
         while (this.carving && carver.add(this.highlight, SEAM_COLOR)) {
@@ -454,26 +278,7 @@ public class GUI {
         }
     }
 
-    private int[][] convertTo2D(int[] pixels, int width, int height) {
-        int[][] result = new int[height][width];
-    
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                result[i][j] = pixels[i * width + j];
-            }
-        }
-    
-        return result;
-    } 
-
-    /*
-     * Remove Seams from the image when using the animate feature.
-     *
-     * @param frame The UI Window. The title is updated to reflect the current size
-     * of the image.
-     * 
-     * @param slider The slider used to determine animation speed.
-     */
+    // 移除seam
     private void carveRemove(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
         while (this.carving && carver.remove(this.highlight, SEAM_COLOR)) {
@@ -486,9 +291,20 @@ public class GUI {
         }
     }
 
-    /*
-     * Clears the display image by making all pixels transparent.
-     */
+    // 将以一维数组表示的像素转换为二维数组
+    private int[][] convertTo2D(int[] pixels, int width, int height) {
+        int[][] result = new int[height][width];
+    
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                result[i][j] = pixels[i * width + j];
+            }
+        }
+    
+        return result;
+    } 
+
+    // 清除缓冲图像
     private void clearBufferedImage() {
         for (int y = 0; y < this.bufferedImage.getHeight(); y++) {
             for (int x = 0; x < this.bufferedImage.getWidth(); x++) {
@@ -497,22 +313,13 @@ public class GUI {
         }
     }
 
-    /*
-     * Sets/Updates the display image to the current state of the selected
-     * Seam Carver.
-     */
+    // 更新显示图像
     private void updateDisplayImage() {
         ImageIcon icon = this.updateBufferedImage();
         this.displayImage.setIcon(icon);
     }
 
-    /*
-     * Enables/Disables all components in a JPanel.
-     *
-     * @param panel The panel to enable/disable.
-     * 
-     * @param enable If true, enable all elements, otherwise disable.
-     */
+    // 设置组件是否可用
     private void setEnabled(JPanel panel, boolean enable) {
         for (Component comp : panel.getComponents()) {
             if (comp instanceof JPanel) {
@@ -523,18 +330,7 @@ public class GUI {
         }
     }
 
-    /*
-     * Adds a drop target to the display image. This allows the user to drag and
-     * drop
-     * files into the panel and have them be processed.
-     * Code from:
-     * https://stackoverflow.com/questions/811248/how-can-i-use-drag-and-drop-in-
-     * swing-to-get-file-path
-     *
-     * @param frame The current window frame. Used to update the title.
-     * 
-     * @param menuPanel The menuPanel to enable once the user drops in an image.
-     */
+    // 添加拖放目标
     private void addDropTarget(JFrame frame, JPanel menuPanel) {
         this.displayImage.setDropTarget(new DropTarget() {
             public synchronized void drop(DropTargetDropEvent evt) {
@@ -546,10 +342,8 @@ public class GUI {
                             .getTransferable()
                             .getTransferData(DataFlavor.javaFileListFlavor);
                     File image = droppedFiles.get(0);
-
-                    // Vertical Seam Carver
+                    // 创建水平/竖直Seam Carver
                     carver[0] = factory.create(image, false, ENERGY_TYPE);
-                    // Horizontal Seam Carver
                     carver[1] = factory.create(image, true, ENERGY_TYPE);
 
                     int width = carver[0].getWidth();
@@ -579,13 +373,7 @@ public class GUI {
         });
     }
 
-    /*
-     * Adds Key Bindings to Buttons.
-     *
-     * @param buttons A list of buttons to add key bindings to.
-     * 
-     * @param keyCodes A list of Key Codes that each button should map to.
-     */
+    // 添加键盘监听器
     private void addKeyListeners(AbstractButton[] buttons, int[] keyCodes) {
         for (int i = 0; i < buttons.length; i++) {
             AbstractButton button = buttons[i];
@@ -601,21 +389,9 @@ public class GUI {
         }
     }
 
-    /*
-     * Adds a mouse listener to the display image which allows the user to
-     * mark high and low priority areas on the image for carving.
-     */
+    // 添加鼠标监听器
     private void addMouseListener() {
-        // Change pixels values of sobel image to change where seams appear.
-        // Change pixels by clicking on the image.
         this.displayImage.addMouseMotionListener(new MouseAdapter() {
-            /*
-             * Activates whenever the user clicks and drags their mouse over any part
-             * of the display image. The coordinates the user click on are converted into
-             * pixel coordinates corresponding to the actual image. Depending on
-             * a left or right-click the corresponding pixels are colored red or green
-             * to show areas of low or high priority.
-             */
             Random rand = new Random(System.currentTimeMillis());
 
             @Override
@@ -627,8 +403,8 @@ public class GUI {
                 int imageWidth = bufferedImage.getWidth(), imageHeight = bufferedImage.getHeight();
                 float labelStepW = (float) imageWidth / displayImage.getWidth();
                 float labelStepH = (float) imageHeight / displayImage.getHeight();
-                int cX = (int) (x * labelStepW + 0.5f); // X coordinate on actual image.
-                int cY = (int) (y * labelStepH + 0.5f); // Y coordinate on actual image.
+                int cX = (int) (x * labelStepW + 0.5f); 
+                int cY = (int) (y * labelStepH + 0.5f); 
                 if (horizontal) {
                     int temp1 = cX;
                     cX = cY;
@@ -648,7 +424,6 @@ public class GUI {
                 int cWidth = current.getWidth(), cHeight = current.getHeight();
                 for (int r = Utils.max(cY - brushWidth, 0); r < Utils.min(cY + brushWidth, cHeight); r++) {
                     for (int c = Utils.max(cX - brushWidth, 0); c < Utils.min(cX + brushWidth, cWidth); c++) {
-                        // If left click, remove edge at given coordinate. If right click, add edge.
                         current.setEnergy(c, r, energy);
                         image[r * cWidth + c] = color;
                     }
@@ -658,11 +433,7 @@ public class GUI {
         });
     }
 
-    /*
-     * Updates the display image for the UI.
-     *
-     * @return An ImageIcon representing the scaled image.
-     */
+    // 更新缓冲图像
     private ImageIcon updateBufferedImage() {
         SeamCarver carver = this.carver[this.idx];
 
@@ -705,7 +476,7 @@ public class GUI {
                         this.bufferedImage.setRGB(x, y, grayPixel);
                     }
                 }
-            } else {
+            } else { // 无处理
                 for (int y = cpu; y < height; y += cpus) {
                     for (int x = 0; x < width; x++) {
                         this.bufferedImage.setRGB(x, y, pixels[y * width + x]);
@@ -723,12 +494,7 @@ public class GUI {
                 Image.SCALE_FAST));
     }
 
-    /*
-     * Captures the current image and saves to a PNG file in the "Snapshots"
-     * directory.
-     *
-     * @return See "Snapshots" directory.
-     */
+    // 捕获快照
     private void captureSnapshot() {
         SeamCarver carver = this.carver[this.idx];
         String filename = Utils.joinPath(Main.SNAPSHOTS_DIR, "Snapshot" + this.count++ + ".png");
@@ -749,15 +515,7 @@ public class GUI {
 
     }
 
-    /*
-     * Creates Image Icons for components used in the User Interface.
-     *
-     * @param filename The filename/path of the Icon to use.
-     * 
-     * @param dims The scaling factors to use to resize the Icon.
-     * 
-     * @return An ImageIcon scaled to the given dimensions.
-     */
+    // 获取icon
     private ImageIcon icon(String filename, int... dims) {
         URL url = getClass().getResource(ICONS_FOLDER + "/" + filename);
         ImageIcon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(url));
