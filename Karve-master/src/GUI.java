@@ -469,12 +469,15 @@ public class GUI {
             } else if (this.grayscale) {
                 // 仅应用灰度处理
                 int[][] grayPixels = Utils.grayscale(this.convertTo2D(pixels, width, height));
-                for (int y = 0; y < height; y++) {
+                for (int y = cpu; y < height; y+= cpus) {
                     for (int x = 0; x < width; x++) {
                         int grayValue = grayPixels[y][x];
                         int grayPixel = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue;
                         this.bufferedImage.setRGB(x, y, grayPixel);
                     }
+                }
+                for (int y = cpu; y < height; y += cpus) {
+                    this.bufferedImage.setRGB(width - 1, y, 0xFF);
                 }
             } else { // 无处理
                 for (int y = cpu; y < height; y += cpus) {
