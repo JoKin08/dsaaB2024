@@ -76,21 +76,81 @@ public abstract class SeamCarverBase {
         return index - 1;
     }
 
-    // 将最近删除的seam添加回图像
+    // // 添加最新被删除的seam
+    // public boolean add(boolean highlight, int color) {
+    //     if (this.seams.isEmpty()) return false;
+
+    //     int[] path = this.seams.pop();
+    //     int[] values = this.values.pop();
+    //     int[] energy = this.energyValues.pop();
+
+    //     Utils.parallel((cpu, cpus) -> {
+    //         for (int i = cpu; i < path.length; i += cpus) {
+    //             this.image.get(i).add(path[i], values[i]);
+    //             this.energy.get(i).add(path[i], energy[i]);
+    //         }
+    //     });
+
+    //     this.width += 1;
+    //     if (this.update) {
+    //         if (highlight) {
+    //             this.updateImage(path, color);
+    //         } else {
+    //             this.updateImage();
+    //         }
+    //     }
+    //     return true;
+    // }
+
+    // 添加下一个seam
     public boolean add(boolean highlight, int color) {
-        if (this.seams.isEmpty()) return false;
-
-        int[] path = this.seams.pop();
-        int[] values = this.values.pop();
-        int[] energy = this.energyValues.pop();
-
+    
+        int[] path = new int[this.height];
+        int[] values = new int[this.height];
+        int[] energyValues = new int[this.height];
+    
+        // 找到能量最小的路径
+        int minIndex = Utils.argmin(this.map[0], this.width);
+        path[0] = minIndex;
+        values[0] = this.image.get(0).get(minIndex);
+        energyValues[0] = this.energy.get(0).get(minIndex);
+    
+        for (int h = 1; h < this.height; h++) {
+            int[] row = this.map[h];
+            if (minIndex == 0) {
+                minIndex = Utils.min(row[0], row[1]) == row[0] ? 0 : 1;
+            } else if (minIndex == this.width - 1) {
+                int minValue = Utils.min(row[this.width - 2], row[this.width - 1]);
+                minIndex = row[this.width - 2] == minValue ? this.width - 2 : this.width - 1;
+            } else {
+                int minValue = Utils.min(row[minIndex - 1], row[minIndex], row[minIndex + 1]);
+                if (row[minIndex - 1] == minValue) minIndex = minIndex - 1;
+                else if (row[minIndex + 1] == minValue) minIndex = minIndex + 1;
+            }
+            path[h] = minIndex;
+            values[h] = this.image.get(h).get(minIndex);
+            energyValues[h] = this.energy.get(h).get(minIndex);
+        }
+    
+        // 并行添加新路径
         Utils.parallel((cpu, cpus) -> {
-            for (int i = cpu; i < path.length; i += cpus) {
-                this.image.get(i).add(path[i], values[i]);
-                this.energy.get(i).add(path[i], energy[i]);
+            for (int h = cpu; h < this.height; h += cpus) {
+                // 检查是否需要调整大小
+                if (this.image.get(h).size() >= this.width) {
+                    List<Integer> newList = new ArrayList<>(this.image.get(h).size() + 1);
+                    newList.addAll(this.image.get(h));
+                    this.image.set(h, newList);
+                }
+                if (this.energy.get(h).size() >= this.width) {
+                    List<Integer> newList = new ArrayList<>(this.energy.get(h).size() + 1);
+                    newList.addAll(this.energy.get(h));
+                    this.energy.set(h, newList);
+                }
+                this.image.get(h).add(path[h], values[h]);
+                this.energy.get(h).add(path[h], energyValues[h]);
             }
         });
-
+    
         this.width += 1;
         if (this.update) {
             if (highlight) {
@@ -99,6 +159,7 @@ public abstract class SeamCarverBase {
                 this.updateImage();
             }
         }
+    
         return true;
     }
 

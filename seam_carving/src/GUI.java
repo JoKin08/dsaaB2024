@@ -221,7 +221,7 @@ public class GUI {
                     captureSnapshot();
                 if (this.update)
                     this.updateDisplayImage();
-                frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
+                frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
         // 单击“删除”按钮时
@@ -234,7 +234,7 @@ public class GUI {
                     captureSnapshot();
                 if (this.update)
                     this.updateDisplayImage();
-                frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
+                frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
             }
         });
         // 单击“快照”按钮时
@@ -274,7 +274,7 @@ public class GUI {
                 captureSnapshot();
             if (this.update)
                 this.updateDisplayImage();
-            frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
     }
@@ -287,7 +287,7 @@ public class GUI {
                 captureSnapshot();
             if (this.update)
                 this.updateDisplayImage();
-            frame.setTitle("Karve - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
     }
