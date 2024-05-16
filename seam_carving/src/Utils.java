@@ -13,6 +13,10 @@ public class Utils {
         return (a < b) ? (a < c ? a : c) : (b < c ? b : c);
     }
 
+    public static int max(int a, int b, int c) {
+        return (a > b) ? (a > c ? a : c) : (b > c ? b : c);
+    }
+
     public static int min(int a, int b) {
         return a < b ? a : b;
     }
@@ -46,7 +50,8 @@ public class Utils {
             for (Thread thread : threads) {
                 thread.join();
             }
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
 
     // 灰度化图像
@@ -81,6 +86,18 @@ public class Utils {
         return index;
     }
 
+    public static int argmax(int[] data, int size) {
+        int index = 0;
+        int max = data[0];
+        for (int i = 1; i < size; i++) {
+            if (data[i] > max) {
+                max = data[i];
+                index = i;
+            }
+        }
+        return index;
+    }
+
     // 边缘填充
     public static int[][] pad(int[][] image, int pad) {
         int height = image.length, width = image[0].length;
@@ -90,19 +107,28 @@ public class Utils {
         parallel((cpu, cpus) -> {
             int h, w;
             for (h = pad + cpu; h < height + pad; h += cpus) {
-                for (w = 0; w < pad; w++) result[h][w] = image[h - pad][0];
-                for (w = pad; w < width + pad; w++) result[h][w] = image[h - pad][w - pad];
-                for (w = width + pad; w < width + pad2; w++) result[h][w] = image[h - pad][width - 1];
+                for (w = 0; w < pad; w++)
+                    result[h][w] = image[h - pad][0];
+                for (w = pad; w < width + pad; w++)
+                    result[h][w] = image[h - pad][w - pad];
+                for (w = width + pad; w < width + pad2; w++)
+                    result[h][w] = image[h - pad][width - 1];
             }
             for (h = cpu; h < pad; h += cpus) {
-                for (w = 0; w < pad; w++) result[h][w] = image[0][0];
-                for (w = pad; w < width + pad; w++) result[h][w] = image[0][w - pad];
-                for (w = width + pad; w < width + pad2; w++) result[h][w] = image[0][width - 1];
+                for (w = 0; w < pad; w++)
+                    result[h][w] = image[0][0];
+                for (w = pad; w < width + pad; w++)
+                    result[h][w] = image[0][w - pad];
+                for (w = width + pad; w < width + pad2; w++)
+                    result[h][w] = image[0][width - 1];
             }
             for (h = height + pad + cpu; h < height + pad2; h += cpus) {
-                for (w = 0; w < pad; w++) result[h][w] = image[height - 1][0];
-                for (w = pad; w < width + pad; w++) result[h][w] = image[height - 1][w - pad];
-                for (w = width + pad; w < width + pad2; w++) result[h][w] = image[height - 1][width - 1];
+                for (w = 0; w < pad; w++)
+                    result[h][w] = image[height - 1][0];
+                for (w = pad; w < width + pad; w++)
+                    result[h][w] = image[height - 1][w - pad];
+                for (w = width + pad; w < width + pad2; w++)
+                    result[h][w] = image[height - 1][width - 1];
             }
         });
 
@@ -151,9 +177,11 @@ public class Utils {
             for (int h = cpu * blockSize; h < height; h += blockSize * cpus) {
                 for (int w = 0; w < width; w += blockSize) {
                     for (int i = h; i < i + blockSize; i++) {
-                        if (i >= height) break;
+                        if (i >= height)
+                            break;
                         for (int j = w; j < w + blockSize; j++) {
-                            if (j >= width) break;
+                            if (j >= width)
+                                break;
                             result[j][i] = image[i][j];
                         }
                     }
@@ -184,7 +212,8 @@ public class Utils {
     public static void delay(int delay) {
         try {
             TimeUnit.MILLISECONDS.sleep(delay);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
 
     // 获取图像的尺寸
@@ -220,8 +249,7 @@ public class Utils {
             int width,
             int height,
             boolean horizontal,
-            String filename
-    ) {
+            String filename) {
         File file = new File(filename);
         BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         if (horizontal) {
@@ -236,7 +264,8 @@ public class Utils {
         }
         try {
             ImageIO.write(bufferedImage, "PNG", file);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     // 读取图像
