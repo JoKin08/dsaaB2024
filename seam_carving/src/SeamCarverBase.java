@@ -15,6 +15,7 @@ public abstract class SeamCarverBase {
     protected int[] data; // 存储当前图像的一维数组
     protected int[][] map; // 存储能量图像的二维数组
     protected int maxWidth; // 最大宽度
+    private int seamCount = 0;
 
     // 构造函数接受 2D 图像数组
     public SeamCarverBase(int[][] image) {
@@ -53,7 +54,7 @@ public abstract class SeamCarverBase {
         if (isAdd)
             return this.maxWidth;
         else {
-            return this.width;
+            return this.maxWidth;
         }
     }
 
@@ -96,40 +97,51 @@ public abstract class SeamCarverBase {
 
     // 添加下一个seam
     public boolean add(boolean highlight, int color) {
+        int k = 2 * seamCount + 1;
+        seamCount++; // 递增计数器
+
+        if (k > this.width)
+            k = this.width;
+
         int[] path = new int[this.height];
         int[] values = new int[this.height];
         int[] energyValues = new int[this.height];
 
-        // 找到能量最小的路径
-        int maxIndex = Utils.argmax(this.map[0], this.width);
-        path[0] = maxIndex;
-        values[0] = this.image.get(0).get(maxIndex);
-        energyValues[0] = this.energy.get(0).get(maxIndex);
+        // 找到第k小能量的路径
+        int minIndex = Utils.kthMinIndex(this.map[0], this.width, k);
+        path[0] = minIndex;
+        values[0] = this.image.get(0).get(minIndex);
+        energyValues[0] = this.energy.get(0).get(minIndex);
 
         for (int h = 1; h < this.height; h++) {
             int[] row = this.map[h];
-            if (maxIndex == 0) {
-                maxIndex = Utils.max(row[0], row[1]) == row[0] ? 0 : 1;
-            } else if (maxIndex == this.width - 1) {
-                int maxValue = Utils.max(row[this.width - 2], row[this.width - 1]);
-                maxIndex = row[this.width - 2] == maxValue ? this.width - 2 : this.width - 1;
+            // if (minIndex == 0) {
+            // minIndex = Utils.kthMinIndex(new int[] { row[0], row[1] }, 2, k);
+            // } else if (minIndex == this.width - 1) {
+            // minIndex = Utils.kthMinIndex(new int[] { row[this.width - 2], row[this.width
+            // - 1] }, 2, k);
+            // } else {
+            // minIndex = Utils.kthMinIndex(new int[] { row[minIndex - 1], row[minIndex],
+            // row[minIndex + 1] },
+            // 3, k);
+            // }
+            if (minIndex == 0) {
+                minIndex = Utils.min(row[0], row[1]) == row[0] ? 0 : 1;
+            } else if (minIndex == this.width - 1) {
+                int minValue = Utils.min(row[this.width - 2], row[this.width - 1]);
+                minIndex = row[this.width - 2] == minValue ? this.width - 2 : this.width - 1;
             } else {
-                int maxValue = Utils.max(row[maxIndex - 1], row[maxIndex], row[maxIndex + 1]);
-                if (row[maxIndex - 1] == maxValue)
-                    maxIndex = maxIndex - 1;
-                else if (row[maxIndex + 1] == maxValue)
-                    maxIndex = maxIndex + 1;
+                int minValue = Utils.min(row[minIndex - 1], row[minIndex], row[minIndex + 1]);
+                if (row[minIndex - 1] == minValue)
+                    minIndex = minIndex - 1;
+                else if (row[minIndex + 1] == minValue)
+                    minIndex = minIndex + 1;
             }
-            path[h] = maxIndex;
-            values[h] = this.image.get(h).get(maxIndex);
-            energyValues[h] = this.energy.get(h).get(maxIndex);
+            path[h] = minIndex;
+            values[h] = this.image.get(h).get(minIndex);
+            energyValues[h] = this.energy.get(h).get(minIndex);
         }
 
-        // // 串行添加新路径
-        // for (int h = 0; h < this.height; h++) {
-        // this.image.get(h).add(path[h], values[h]);
-        // this.energy.get(h).add(path[h], energyValues[h]);
-        // }
         // 并行添加新路径
         Utils.parallel((cpu, cpus) -> {
             for (int h = cpu; h < this.height; h += cpus) {

@@ -293,4 +293,42 @@ public class Utils {
             return null;
         }
     }
+
+    public static int kthMinIndex(int[] array, int length, int k) {
+        return quickSelect(array, 0, length - 1, k - 1); // k - 1 因为k是从1开始的，而索引是从0开始
+    }
+
+    private static int quickSelect(int[] array, int left, int right, int k) {
+        if (left == right) {
+            return left;
+        }
+        int pivotIndex = partition(array, left, right);
+        if (k == pivotIndex) {
+            return k;
+        } else if (k < pivotIndex) {
+            return quickSelect(array, left, pivotIndex - 1, k);
+        } else {
+            return quickSelect(array, pivotIndex + 1, right, k);
+        }
+    }
+
+    private static int partition(int[] array, int left, int right) {
+        int pivot = array[right];
+        int i = left;
+        for (int j = left; j < right; j++) {
+            if (array[j] <= pivot) {
+                swap(array, i, j);
+                i++;
+            }
+        }
+        swap(array, i, right);
+        return i;
+    }
+
+    private static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
 }
