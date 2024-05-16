@@ -11,13 +11,15 @@ public class SeamCarverBackward extends SeamCarverBase implements SeamCarver {
 
     public boolean add(boolean highlight, int color) {
         boolean valid = super.add(highlight, color);
-        if (valid) this.energyMap();
+        if (valid)
+            this.energyMap();
         return valid;
     }
 
     public boolean remove(boolean highlight, int color) {
         boolean valid = super.remove(highlight, color);
-        if (valid) this.energyMap();
+        if (valid)
+            this.energyMap();
         return valid;
     }
 

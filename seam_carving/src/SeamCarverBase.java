@@ -49,8 +49,16 @@ public abstract class SeamCarverBase {
         }
     }
 
+    public int getWidth(boolean isAdd) {
+        if (isAdd)
+            return this.maxWidth;
+        else {
+            return this.width;
+        }
+    }
+
     public int getWidth() {
-        return this.maxWidth;
+        return this.width;
     }
 
     public int getHeight() {
@@ -117,11 +125,29 @@ public abstract class SeamCarverBase {
             energyValues[h] = this.energy.get(h).get(maxIndex);
         }
 
-        // 串行添加新路径
-        for (int h = 0; h < this.height; h++) {
-            this.image.get(h).add(path[h], values[h]);
-            this.energy.get(h).add(path[h], energyValues[h]);
-        }
+        // // 串行添加新路径
+        // for (int h = 0; h < this.height; h++) {
+        // this.image.get(h).add(path[h], values[h]);
+        // this.energy.get(h).add(path[h], energyValues[h]);
+        // }
+        // 并行添加新路径
+        Utils.parallel((cpu, cpus) -> {
+            for (int h = cpu; h < this.height; h += cpus) {
+                // 检查是否需要调整大小
+                if (this.image.get(h).size() >= this.width) {
+                    List<Integer> newList = new ArrayList<>(this.image.get(h).size() + 1);
+                    newList.addAll(this.image.get(h));
+                    this.image.set(h, newList);
+                }
+                if (this.energy.get(h).size() >= this.width) {
+                    List<Integer> newList = new ArrayList<>(this.energy.get(h).size() + 1);
+                    newList.addAll(this.energy.get(h));
+                    this.energy.set(h, newList);
+                }
+                this.image.get(h).add(path[h], values[h]);
+                this.energy.get(h).add(path[h], energyValues[h]);
+            }
+        });
 
         this.width += 1;
         if (this.update) {

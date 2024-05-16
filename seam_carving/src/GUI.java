@@ -30,6 +30,7 @@ public class GUI {
     private boolean direction; // Seam的方向：Removing = False, Adding = True
     private boolean highlight;
     private boolean horizontal; // 水平（True）或垂直（False）Seam Carver
+    private boolean isAdd = true;
     private int count; // 用于保存快照的计数器
     private int scaleW, scaleH; // 显示图像的缩放比例
     private final JLabel displayImage; // 用于显示图像的JLabel
@@ -118,7 +119,7 @@ public class GUI {
             if (this.update)
                 this.updateDisplayImage();
             SeamCarver carver = this.carver[this.idx];
-            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " +
+            frame.setTitle("Seam-Carving - " + carver.getWidth(isAdd) + " x " +
                     carver.getHeight());
         });
         checkBoxPanel.add(horizontalCheckBox);
@@ -221,7 +222,7 @@ public class GUI {
                     captureSnapshot();
                 if (this.update)
                     this.updateDisplayImage();
-                frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
+                frame.setTitle("Seam-Carving - " + carver.getWidth(isAdd) + " x " + carver.getHeight());
             }
         });
         // 单击“删除”按钮时
@@ -234,7 +235,7 @@ public class GUI {
                     captureSnapshot();
                 if (this.update)
                     this.updateDisplayImage();
-                frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
+                frame.setTitle("Seam-Carving - " + carver.getWidth(isAdd) + " x " + carver.getHeight());
             }
         });
         // 单击“快照”按钮时
@@ -269,12 +270,13 @@ public class GUI {
     // 添加seam
     private void carveAdd(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
+        isAdd = true;
         while (this.carving && carver.add(this.highlight, SEAM_COLOR)) {
             if (this.recording)
                 captureSnapshot();
             if (this.update)
                 this.updateDisplayImage();
-            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth(isAdd) + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
     }
@@ -282,12 +284,13 @@ public class GUI {
     // 移除seam
     private void carveRemove(JFrame frame, JSlider slider) {
         SeamCarver carver = this.carver[this.idx];
+        isAdd = false;
         while (this.carving && carver.remove(this.highlight, SEAM_COLOR)) {
             if (this.recording)
                 captureSnapshot();
             if (this.update)
                 this.updateDisplayImage();
-            frame.setTitle("Seam-Carving - " + carver.getWidth() + " x " + carver.getHeight());
+            frame.setTitle("Seam-Carving - " + carver.getWidth(isAdd) + " x " + carver.getHeight());
             Utils.delay(SLIDER - slider.getValue());
         }
     }
@@ -351,7 +354,7 @@ public class GUI {
                     carver[0] = factory.create(image, false, ENERGY_TYPE);
                     carver[1] = factory.create(image, true, ENERGY_TYPE);
 
-                    int width = carver[0].getWidth();
+                    int width = carver[0].getWidth(isAdd);
                     int height = carver[0].getHeight();
                     brushWidth = Utils.max(Utils.min(width, height) / 120, 5);
 
@@ -359,7 +362,7 @@ public class GUI {
                     bufferedImage.setAccelerationPriority(1f);
 
                     idx = horizontal ? 1 : 0;
-                    int scale = Utils.getDimensions(carver[idx].getWidth(), carver[idx].getHeight());
+                    int scale = Utils.getDimensions(carver[idx].getWidth(isAdd), carver[idx].getHeight());
                     scaleW = width / scale;
                     scaleH = height / scale;
 
@@ -368,7 +371,7 @@ public class GUI {
 
                     setEnabled(menuPanel, true);
                     frame.pack();
-                    frame.setTitle("Group22 - " + carver[idx].getWidth() + " x " + carver[idx].getHeight());
+                    frame.setTitle("Group22 - " + carver[idx].getWidth(isAdd) + " x " + carver[idx].getHeight());
 
                     evt.dropComplete(true);
                 } catch (Exception ignored) {
@@ -426,7 +429,7 @@ public class GUI {
                 int energy = isLeftClick ? 0 : (ENERGY_TYPE == EnergyType.FORWARD ? rand.nextInt(256) : 255);
                 int color = isLeftClick ? Color.RED.getRGB() : Color.GREEN.getRGB();
                 int[] image = current.getImage();
-                int cWidth = current.getWidth(), cHeight = current.getHeight();
+                int cWidth = current.getWidth(isAdd), cHeight = current.getHeight();
                 for (int r = Utils.max(cY - brushWidth, 0); r < Utils.min(cY + brushWidth, cHeight); r++) {
                     for (int c = Utils.max(cX - brushWidth, 0); c < Utils.min(cX + brushWidth, cWidth); c++) {
                         current.setEnergy(c, r, energy);
@@ -442,7 +445,7 @@ public class GUI {
     private ImageIcon updateBufferedImage() {
         SeamCarver carver = this.carver[this.idx];
 
-        int width = carver.getWidth();
+        int width = carver.getWidth(isAdd);
         int height = carver.getHeight();
 
         int[] pixels = carver.getImage();
@@ -509,7 +512,7 @@ public class GUI {
         if (CROP_SNAPSHOT) {
             Utils.writeImage(
                     carver.getImage(),
-                    carver.getWidth(),
+                    carver.getWidth(isAdd),
                     carver.getHeight(),
                     this.horizontal,
                     filename);
